@@ -43,7 +43,12 @@ def sample(p):
     return np.argmax(np.random.multinomial(1, p))
 
 class Model:
-    ''' simple one layer model for car racing '''
+    ''' 
+    Simple one layer model for car racing 
+
+    - Controller model:
+        a_t = W_c [z_t, h_t] +b_c
+    '''
     def __init__(self, load_model=True):
         self.env_name = "carracing"
         self.vae = ConvVAE(batch_size=1, gpu_mode=False, is_training=False, reuse=True)
