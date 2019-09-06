@@ -243,7 +243,7 @@ def main():
         the_seed = int(sys.argv[3])
         print("seed", the_seed)
 
-    if (use_model):
+    if use_model:
         model = make_model()
         print('model size', model.param_count)
         model.make_env(render_mode=render_mode)
@@ -275,4 +275,10 @@ if __name__ == "__main__":
 
 '''
 $ python3 model.py render <filename> <seed>
+
+$ python3 model.py render log/carracing.cma.16.64.best.json
+
+$ python3 model.py norender log/carracing.cma.16.64.best.json
+
+$ python3 dream_model.py log/carracing.cma.16.64.best.json
 '''
