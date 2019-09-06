@@ -30,66 +30,66 @@ class ConvVAE(object):
         
     def _build_graph(self):
         self.g = tf.Graph()
-            with self.g.as_default():
-                self.x = tf.placeholder(tf.float32, shape=[None, 64, 64, 3])
+        with self.g.as_default():
+            self.x = tf.placeholder(tf.float32, shape=[None, 64, 64, 3])
 
-                # Encoder
-                h = tf.layers.conv2d(self.x, 32, 4, strides=2, activation=tf.nn.relu, name="enc_conv1")
-                h = tf.layers.conv2d(h, 64, 4, strides=2, activation=tf.nn.relu, name="enc_conv2")
-                h = tf.layers.conv2d(h, 128, 4, strides=2, activation=tf.nn.relu, name="enc_conv3")
-                h = tf.layers.conv2d(h, 256, 4, strides=2, activation=tf.nn.relu, name="enc_conv4")
-                h = tf.reshape(h, [-1, 2*2*256])
+            # Encoder
+            h = tf.layers.conv2d(self.x, 32, 4, strides=2, activation=tf.nn.relu, name="enc_conv1")
+            h = tf.layers.conv2d(h, 64, 4, strides=2, activation=tf.nn.relu, name="enc_conv2")
+            h = tf.layers.conv2d(h, 128, 4, strides=2, activation=tf.nn.relu, name="enc_conv3")
+            h = tf.layers.conv2d(h, 256, 4, strides=2, activation=tf.nn.relu, name="enc_conv4")
+            h = tf.reshape(h, [-1, 2*2*256])
 
-                # VAE
-                self.mu = tf.layers.dense(h, self.z_size, name="enc_fc_mu")
-                self.logvar = tf.layers.dense(h, self.z_size, name="enc_fc_log_var")
-                self.sigma = tf.exp(self.logvar / 2.0)
-                self.epsilon = tf.random_normal([self.batch_size, self.z_size])
-                self.z = self.mu + self.sigma * self.epsilon
+            # VAE
+            self.mu = tf.layers.dense(h, self.z_size, name="enc_fc_mu")
+            self.logvar = tf.layers.dense(h, self.z_size, name="enc_fc_log_var")
+            self.sigma = tf.exp(self.logvar / 2.0)
+            self.epsilon = tf.random_normal([self.batch_size, self.z_size])
+            self.z = self.mu + self.sigma * self.epsilon
 
-                # Decoder
-                h = tf.layers.dense(self.z, 4*256, name="dec_fc")
-                h = tf.reshape(h, [-1, 1, 1, 4*256])
-                h = tf.layers.conv2d_transpose(h, 128, 5, strides=2, activation=tf.nn.relu, name="dec_deconv1")
-                h = tf.layers.conv2d_transpose(h, 64, 5, strides=2, activation=tf.nn.relu, name="dec_deconv2")
-                h = tf.layers.conv2d_transpose(h, 32, 6, strides=2, activation=tf.nn.relu, name="dec_deconv3")
-                self.y = tf.layers.conv2d_transpose(h, 3, 6, strides=2, activation=tf.nn.sigmoid, name="dec_deconv4")
-      
-                # train ops
-                if self.is_training:
-                    self.global_step = tf.Variable(0, name='global_step', trainable=False)
+            # Decoder
+            h = tf.layers.dense(self.z, 4*256, name="dec_fc")
+            h = tf.reshape(h, [-1, 1, 1, 4*256])
+            h = tf.layers.conv2d_transpose(h, 128, 5, strides=2, activation=tf.nn.relu, name="dec_deconv1")
+            h = tf.layers.conv2d_transpose(h, 64, 5, strides=2, activation=tf.nn.relu, name="dec_deconv2")
+            h = tf.layers.conv2d_transpose(h, 32, 6, strides=2, activation=tf.nn.relu, name="dec_deconv3")
+            self.y = tf.layers.conv2d_transpose(h, 3, 6, strides=2, activation=tf.nn.sigmoid, name="dec_deconv4")
 
-                    eps = 1e-6 # avoid taking log of zero
-        
-                    # reconstruction loss
-                    self.r_loss = tf.reduce_sum(tf.square(self.x - self.y), reduction_indices = [1,2,3])
-                    self.r_loss = tf.reduce_mean(self.r_loss)
+            # train ops
+            if self.is_training:
+                self.global_step = tf.Variable(0, name='global_step', trainable=False)
 
-                    # augmented kl loss per dim
-                    self.kl_loss = - 0.5 * tf.reduce_sum((1 + self.logvar - tf.square(self.mu) - tf.exp(self.logvar)), reduction_indices = 1)
-                    self.kl_loss = tf.maximum(self.kl_loss, self.kl_tolerance * self.z_size)
-                    self.kl_loss = tf.reduce_mean(self.kl_loss)
+                eps = 1e-6 # avoid taking log of zero
 
-                    self.loss = self.r_loss + self.kl_loss
-        
-                    # training
-                    self.lr = tf.Variable(self.learning_rate, trainable=False)
-                    self.optimizer = tf.train.AdamOptimizer(self.lr)
-                    grads = self.optimizer.compute_gradients(self.loss) # can potentially clip gradients here.
+                # reconstruction loss
+                self.r_loss = tf.reduce_sum(tf.square(self.x - self.y), reduction_indices = [1,2,3])
+                self.r_loss = tf.reduce_mean(self.r_loss)
 
-                    self.train_op = self.optimizer.apply_gradients(grads, global_step=self.global_step, name='train_step')
+                # augmented kl loss per dim
+                self.kl_loss = - 0.5 * tf.reduce_sum((1 + self.logvar - tf.square(self.mu) - tf.exp(self.logvar)), reduction_indices = 1)
+                self.kl_loss = tf.maximum(self.kl_loss, self.kl_tolerance * self.z_size)
+                self.kl_loss = tf.reduce_mean(self.kl_loss)
 
-                # initialize vars
-                self.init = tf.global_variables_initializer()
-      
-                t_vars = tf.trainable_variables()
-                self.assign_ops = {}
-                for var in t_vars:
-                    #if var.name.startswith('conv_vae'):
-                    pshape = var.get_shape()
-                    pl = tf.placeholder(tf.float32, pshape, var.name[:-2]+'_placeholder')
-                    assign_op = var.assign(pl)
-                    self.assign_ops[var] = (assign_op, pl)
+                self.loss = self.r_loss + self.kl_loss
+
+                # training
+                self.lr = tf.Variable(self.learning_rate, trainable=False)
+                self.optimizer = tf.train.AdamOptimizer(self.lr)
+                grads = self.optimizer.compute_gradients(self.loss) # can potentially clip gradients here.
+
+                self.train_op = self.optimizer.apply_gradients(grads, global_step=self.global_step, name='train_step')
+
+            # initialize vars
+            self.init = tf.global_variables_initializer()
+
+            t_vars = tf.trainable_variables()
+            self.assign_ops = {}
+            for var in t_vars:
+                #if var.name.startswith('conv_vae'):
+                pshape = var.get_shape()
+                pl = tf.placeholder(tf.float32, pshape, var.name[:-2]+'_placeholder')
+                assign_op = var.assign(pl)
+                self.assign_ops[var] = (assign_op, pl)
 
     def _init_session(self):
         """Launch TensorFlow session and initialize variables"""

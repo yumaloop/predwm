@@ -134,18 +134,18 @@ class MDNRNN():
 
         logSqrtTwoPI = np.log(np.sqrt(2.0 * np.pi))
 
-    def tf_lognormal(y, mean, logstd):
-        return -0.5 * ((y - mean) / tf.exp(logstd)) ** 2 - logstd - logSqrtTwoPI
+        def tf_lognormal(y, mean, logstd):
+            return -0.5 * ((y - mean) / tf.exp(logstd)) ** 2 - logstd - logSqrtTwoPI
 
-    def get_lossfunc(logmix, mean, logstd, y):
-        v = logmix + tf_lognormal(y, mean, logstd)
-        v = tf.reduce_logsumexp(v, 1, keepdims=True)
-        return -tf.reduce_mean(v)
+        def get_lossfunc(logmix, mean, logstd, y):
+            v = logmix + tf_lognormal(y, mean, logstd)
+            v = tf.reduce_logsumexp(v, 1, keepdims=True)
+            return -tf.reduce_mean(v)
 
-    def get_mdn_coef(output):
-        logmix, mean, logstd = tf.split(output, 3, 1)
-        logmix = logmix - tf.reduce_logsumexp(logmix, 1, keepdims=True)
-        return logmix, mean, logstd
+        def get_mdn_coef(output):
+            logmix, mean, logstd = tf.split(output, 3, 1)
+            logmix = logmix - tf.reduce_logsumexp(logmix, 1, keepdims=True)
+            return logmix, mean, logstd
 
         out_logmix, out_mean, out_logstd = get_mdn_coef(output)
 
@@ -184,26 +184,27 @@ class MDNRNN():
         """Launch TensorFlow session and initialize variables"""
         self.sess = tf.Session(graph=self.g)
         self.sess.run(self.init)
-        def close_sess(self):
+        
+    def close_sess(self):
         """ Close TensorFlow session """
         self.sess.close()
         
     def get_model_params(self):
-    # get trainable params.
-    model_names = []
-    model_params = []
-    model_shapes = []
-    
-    with self.g.as_default():
-        t_vars = tf.trainable_variables()
-        for var in t_vars:
-            #if var.name.startswith('mdn_rnn'):
-            param_name = var.name
-            p = self.sess.run(var)
-            model_names.append(param_name)
-            params = np.round(p*10000).astype(np.int).tolist()
-            model_params.append(params)
-            model_shapes.append(p.shape)
+        # get trainable params.
+        model_names = []
+        model_params = []
+        model_shapes = []
+
+        with self.g.as_default():
+            t_vars = tf.trainable_variables()
+            for var in t_vars:
+                #if var.name.startswith('mdn_rnn'):
+                param_name = var.name
+                p = self.sess.run(var)
+                model_names.append(param_name)
+                params = np.round(p*10000).astype(np.int).tolist()
+                model_params.append(params)
+                model_shapes.append(p.shape)
         return model_params, model_shapes, model_names
     
     def get_random_model_params(self, stdev=0.5):

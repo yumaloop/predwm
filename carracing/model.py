@@ -272,3 +272,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+'''
+$ python3 model.py render <filename> <seed>
+'''
