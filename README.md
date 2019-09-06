@@ -1,4 +1,4 @@
-# World Models Experiments
+# Predictive Coding on World Models
 
 Step by step instructions of reproducing [World Models](https://worldmodels.github.io/) ([pdf](https://arxiv.org/abs/1803.10122)).
 
