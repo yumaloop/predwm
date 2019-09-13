@@ -38,7 +38,7 @@ def default_hps():
                      max_seq_len=1000, # train on sequences of 100
                      input_seq_width=35, # width of our data (32 + 3 actions)
                      output_seq_width=32, # width of our data is 32
-                     rnn_size=256, # number of units in the LSTM cell in RNN.
+                     rnn_size=256, # number of rnn cells
                      batch_size=100, # minibatch sizes
                      grad_clip=1.0, # 
                      num_mixture=5, # number of mixtures in MDN

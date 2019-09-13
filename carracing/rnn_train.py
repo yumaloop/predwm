@@ -81,7 +81,7 @@ hps = hps_model
 start = time.time()
 for local_step in range(hps.num_steps):
     step = rnn.sess.run(rnn.global_step)
-    curr_learning_rate = (hps.learning_rate-hps.min_learning_rate) * (hps.decay_rate) ** step + hps.min_learning_rate
+    curr_learning_rate = (hps.learning_rate - hps.min_learning_rate) * (hps.decay_rate) ** step + hps.min_learning_rate
 
     raw_z, raw_a = random_batch()
     inputs = np.concatenate((raw_z[:, :-1, :], raw_a[:, :-1, :]), axis=2)
