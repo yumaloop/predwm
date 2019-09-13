@@ -82,16 +82,17 @@ start = time.time()
 for local_step in range(hps.num_steps):
     step = rnn.sess.run(rnn.global_step)
     curr_learning_rate = (hps.learning_rate - hps.min_learning_rate) * (hps.decay_rate) ** step + hps.min_learning_rate
-
     raw_z, raw_a = random_batch()
     inputs = np.concatenate((raw_z[:, :-1, :], raw_a[:, :-1, :]), axis=2)
     outputs = raw_z[:, 1:, :] # teacher forcing (shift by one predictions)
-
     feed = {rnn.input_x: inputs, rnn.output_x: outputs, rnn.lr: curr_learning_rate}
+
+    # train rnn model
     (train_cost, state, train_step, _) = rnn.sess.run([rnn.cost, rnn.final_state, rnn.global_step, rnn.train_op], feed)
-    if (step%20==0 and step > 0):
+
+    if (step % 20 == 0 and step > 0):
         end = time.time()
-        time_taken = end-start
+        time_taken = end - start
         start = time.time()
         output_log = "step: %d, lr: %.6f, cost: %.4f, train_time_taken: %.4f" % (step, curr_learning_rate, train_cost, time_taken)
         print(output_log)

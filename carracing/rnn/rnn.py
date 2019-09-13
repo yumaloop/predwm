@@ -93,6 +93,7 @@ class MDNRNN():
         is_training = False if self.hps.is_training == 0 else True
         use_layer_norm = False if self.hps.use_layer_norm == 0 else True
 
+        # LSTM
         if use_recurrent_dropout:
             cell = cell_fn(hps.rnn_size, layer_norm=use_layer_norm, dropout_keep_prob=self.hps.recurrent_dropout_prob)
         else:
@@ -109,12 +110,12 @@ class MDNRNN():
         if use_output_dropout:
             print("applying dropout to output with keep_prob =", self.hps.output_dropout_prob)
             cell = tf.contrib.rnn.DropoutWrapper(cell, output_keep_prob=self.hps.output_dropout_prob)
-        self.cell = cell
 
+        # Define RNN graph
+        self.cell = cell
         self.sequence_lengths = LENGTH # assume every sample has same length.
         self.input_x = tf.placeholder(dtype=tf.float32, shape=[self.hps.batch_size, self.hps.max_seq_len, INWIDTH])
         self.output_x = tf.placeholder(dtype=tf.float32, shape=[self.hps.batch_size, self.hps.max_seq_len, OUTWIDTH])
-
         actual_input_x = self.input_x
         self.initial_state = cell.zero_state(batch_size=hps.batch_size, dtype=tf.float32) 
 
@@ -144,20 +145,17 @@ class MDNRNN():
 
         def get_mdn_coef(output):
             logmix, mean, logstd = tf.split(output, 3, 1)
-            logmix = logmix - tf.reduce_logsumexp(logmix, 1, keepdims=True)
+            logmix = logmix - tf.reduce_logsumexp(logmix, 1, keepdims=True) # Computes log(sum(exp(elements across dimensions of a tensor))). 
             return logmix, mean, logstd
 
         out_logmix, out_mean, out_logstd = get_mdn_coef(output)
-
         self.out_logmix = out_logmix
         self.out_mean = out_mean
         self.out_logstd = out_logstd
 
         # reshape target data so that it is compatible with prediction shape
         flat_target_data = tf.reshape(self.output_x,[-1, 1])
-
         lossfunc = get_lossfunc(out_logmix, out_mean, out_logstd, flat_target_data)
-
         self.cost = tf.reduce_mean(lossfunc)
 
         if self.hps.is_training == 1:
