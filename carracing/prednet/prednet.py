@@ -148,6 +148,7 @@ class PredNet():
 
 
             for l in range(self.nb_layers):
+                # Ahat
                 with tf.variable_scope("conv_ahat"+str(l)):
                     input_ = r[l]
                     k_h = 3
@@ -179,6 +180,7 @@ class PredNet():
                         output = e[l]
 
                 if l < self.nb_layers - 1:
+                    # A
                     with tf.variable_scope("conv_a"+str(l)):
                         input_ = e[l]
                         k_h = 3
