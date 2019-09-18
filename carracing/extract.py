@@ -10,7 +10,6 @@ from model import make_model
 
 MAX_FRAMES = 1000 # max length of carracing
 MAX_TRIALS = 200 # just use this to extract one trial. 
-
 render_mode = False # for debugging.
 
 DIR_NAME = 'record'
@@ -23,12 +22,12 @@ model.make_env(render_mode=render_mode, full_episode=True)
 for trial in range(MAX_TRIALS): # 200 trials per worker
     try:
         random_generated_int = random.randint(0, 2**31-1)
-        filename = DIR_NAME+"/"+str(random_generated_int)+".npz"
-        recording_obs = []
-        recording_action = []
-
         np.random.seed(random_generated_int)
         model.env.seed(random_generated_int)
+        
+        filename = DIR_NAME + "/" + str(random_generated_int) + ".npz"
+        recording_obs = []
+        recording_action = []
 
         # random policy
         model.init_random_model_params(stdev=np.random.rand()*0.01)

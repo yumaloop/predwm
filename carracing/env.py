@@ -2,6 +2,7 @@ import numpy as np
 import gym
 
 from scipy.misc import imresize as resize
+from scipy.misc import imread
 from gym.spaces.box import Box
 from gym.envs.box2d.car_racing import CarRacing
 
