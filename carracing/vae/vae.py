@@ -40,14 +40,14 @@ class ConvVAE(object):
             h = tf.layers.conv2d(h, 256, 4, strides=2, activation=tf.nn.relu, name="enc_conv4")
             h = tf.reshape(h, [-1, 2*2*256])
 
-            # VAE
+            # VAE (x -> z)
             self.mu = tf.layers.dense(h, self.z_size, name="enc_fc_mu")
             self.logvar = tf.layers.dense(h, self.z_size, name="enc_fc_log_var")
             self.sigma = tf.exp(self.logvar / 2.0)
             self.epsilon = tf.random_normal([self.batch_size, self.z_size])
             self.z = self.mu + self.sigma * self.epsilon
 
-            # Decoder
+            # Decoder (z -> y)
             h = tf.layers.dense(self.z, 4*256, name="dec_fc")
             h = tf.reshape(h, [-1, 1, 1, 4*256])
             h = tf.layers.conv2d_transpose(h, 128, 5, strides=2, activation=tf.nn.relu, name="dec_deconv1")
@@ -70,6 +70,7 @@ class ConvVAE(object):
                 self.kl_loss = tf.maximum(self.kl_loss, self.kl_tolerance * self.z_size)
                 self.kl_loss = tf.reduce_mean(self.kl_loss)
 
+                # loss function
                 self.loss = self.r_loss + self.kl_loss
 
                 # training
@@ -81,8 +82,9 @@ class ConvVAE(object):
 
             # initialize vars
             self.init = tf.global_variables_initializer()
-
             t_vars = tf.trainable_variables()
+
+            # assign prams
             self.assign_ops = {}
             for var in t_vars:
                 #if var.name.startswith('conv_vae'):
@@ -121,8 +123,8 @@ class ConvVAE(object):
                 #if var.name.startswith('conv_vae'):
                 param_name = var.name
                 p = self.sess.run(var)
+                params = np.round(p * 10000).astype(np.int).tolist()
                 model_names.append(param_name)
-                params = np.round(p*10000).astype(np.int).tolist()
                 model_params.append(params)
                 model_shapes.append(p.shape)
         return model_params, model_shapes, model_names
@@ -133,7 +135,7 @@ class ConvVAE(object):
         rparam = []
         for s in mshape:
             #rparam.append(np.random.randn(*s)*stdev)
-            rparam.append(np.random.standard_cauchy(s)*stdev) # spice things up
+            rparam.append(np.random.standard_cauchy(s) * stdev) # spice things up
         return rparam
     
     def set_model_params(self, params):
