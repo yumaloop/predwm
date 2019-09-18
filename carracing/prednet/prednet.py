@@ -113,7 +113,6 @@ class PredNet():
         img_h, img_w, img_c = self.img_shape
         for u in ["r", "c", "e"]:
             for l in range(self.nb_layers):
-                ds_factor = 2 ** l
                 if u in ['r', 'c']:
                     stack_size = self.R_stack_sizes[l]
                 elif u == 'e':
