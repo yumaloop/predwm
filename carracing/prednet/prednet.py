@@ -23,6 +23,7 @@ class PredNet():
                     pixel_max=1, 
                     output_mode='all', 
                     extrap_start_time=None):
+
         self.batch_size = batch_size
         self.time_step = time_step
         self.layer_loss_weights = layer_loss_weights
